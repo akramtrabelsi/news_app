@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:news_app/api/posts_api.dart';
+
+import 'package:news_app/models/post.dart';
+import 'dart:async';
+import 'package:timeago/timeago.dart' as timeago;
 
 class WhatsNews extends StatefulWidget {
   @override
@@ -6,6 +11,7 @@ class WhatsNews extends StatefulWidget {
 }
 
 class _WhatsNewsState extends State<WhatsNews> {
+  PostsAPI postsAPI = PostsAPI();
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -13,6 +19,7 @@ class _WhatsNewsState extends State<WhatsNews> {
         children: [
           _drawHeader(),
           _drawTopStories(),
+          _drawRecentUpdate(),
         ],
       ),
     );
@@ -33,37 +40,54 @@ class _WhatsNewsState extends State<WhatsNews> {
           Padding(
             padding: EdgeInsets.all(12),
             child: Card(
-              child: Column(
-                children: [
-                  _drawSingleRow(),
-                  _drawDivider(),
-                  _drawSingleRow(),
-                  _drawDivider(),
-                  _drawSingleRow()
-                ],
+              child: FutureBuilder(
+                future: postsAPI.fetchWhatsNew(),
+                builder: (context, AsyncSnapshot snapShot) {
+                  Post post1 = snapShot.data[0];
+                  Post post2 = snapShot.data[1];
+                  Post post3 = snapShot.data[2];
+                  return Column(
+                    children: <Widget>[
+                      _drawSingleRow(post1),
+                      _drawDivider(),
+                      _drawSingleRow(post2),
+                      _drawDivider(),
+                      _drawSingleRow(post3),
+                    ],
+                  );
+                },
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _drawRecentUpdate() {
+    return Padding(
+      padding: EdgeInsets.all(8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Padding(
-            padding: EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 16, bottom: 8, top: 8),
-                  child: _drawSectionTitle('Recent Update'),
-                ),
-                _drawRecentUpdateCard(Colors.deepOrange),
-                _drawRecentUpdateCard(Colors.teal),
-                SizedBox(
-                  height: 48,
-                )
-              ],
-            ),
+            padding: const EdgeInsets.only(left: 16, bottom: 8, top: 8),
+            child: _drawSectionTitle('Recent Update'),
+          ),
+          _drawRecentUpdateCard(Colors.deepOrange),
+          _drawRecentUpdateCard(Colors.teal),
+          SizedBox(
+            height: 48,
           )
         ],
       ),
     );
+  }
+
+  String _parseHumanDateTime(String dateTime) {
+    Duration timeAgo = DateTime.now().difference(DateTime.parse(dateTime));
+    DateTime theDifference = DateTime.now().subtract(timeAgo);
+    return timeago.format(theDifference);
   }
 
   Widget _drawSectionTitle(String title) {
@@ -138,62 +162,65 @@ class _WhatsNewsState extends State<WhatsNews> {
     );
   }
 
-  Widget _drawSingleRow() {
-    return Padding(
-      padding: const EdgeInsets.all(12.0),
-      child: Row(
-        children: [
-          SizedBox(
-            child: Image(
-              image: ExactAssetImage('assets/images/placeholder_bg.jpg'),
-              fit: BoxFit.cover,
-            ),
-            height: 120,
-            width: 120,
-          ),
-          SizedBox(
-            width: 12,
-          ),
-          Expanded(
-            child: Column(
+  Widget _drawSingleRow(Post post) {
+    return post.featuredImage == null
+        ? Container()
+        : Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
               children: [
-                Text(
-                  'The World Global Warming Global Summit',
-                  maxLines: 2,
-                  style: TextStyle(fontSize: 17),
+                SizedBox(
+                  child: Image.network(
+                    post.featuredImage,
+                    fit: BoxFit.cover,
+                  ),
+                  height: 120,
+                  width: 120,
                 ),
                 SizedBox(
-                  height: 20,
+                  width: 12,
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Micheal Adams',
-                      style:
-                          TextStyle(fontSize: 12, color: Colors.grey.shade700),
-                    ),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.timer,
-                          color: Colors.grey.shade700,
-                          size: 22,
-                        ),
-                        Text(
-                          '15 min',
-                          style: TextStyle(color: Colors.grey.shade900),
-                        )
-                      ],
-                    )
-                  ],
-                )
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        post.title,
+                        maxLines: 2,
+                        style: TextStyle(fontSize: 17),
+                      ),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Micheal Adams',
+                            style: TextStyle(
+                                fontSize: 12, color: Colors.grey.shade700),
+                          ),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.timer,
+                                color: Colors.grey.shade700,
+                                size: 20,
+                              ),
+                              Text(
+                                _parseHumanDateTime(post.dateWritten),
+                                style: TextStyle(
+                                    color: Colors.grey.shade900, fontSize: 12),
+                              )
+                            ],
+                          )
+                        ],
+                      )
+                    ],
+                  ),
+                ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
+          );
   }
 
   Widget _drawHeader() {

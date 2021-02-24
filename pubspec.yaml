@@ -25,7 +25,9 @@ dependencies:
   google_fonts: ^1.1.0
   loading_indicator: ^1.2.0
   shared_preferences: ^0.5.10
-  http: ^0.12.2
+  http: ^0.12.0+2
+  wifi_info_flutter: ^1.0.4
+  timeago: ^2.0.30
 
   flutter:
     sdk: flutter

@@ -1,2 +1,4 @@
-String base_api = "http://127.0.0.1:8000";
+String base_api = "http://192.168.1.71";
 String all_authors_api = "/api/authors";
+String all_categories = "/api/categories";
+String whats_new_api = "/api/posts/categories/1";
