@@ -32,15 +32,13 @@ class _PopularState extends State<Popular> {
               if (snapShot.hasData) {
                 List<Post> posts = snapShot.data;
                 return ListView.builder(
+                  itemCount: 15,
                   itemBuilder: (context, position) {
                     return Card(
                       child: _drawSingleRow(posts[position]),
                     );
                   },
-                  itemCount: 20,
                 );
-              } else {
-                return noData();
               }
             }
         }
