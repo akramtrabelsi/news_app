@@ -43,18 +43,39 @@ class _WhatsNewsState extends State<WhatsNews> {
               child: FutureBuilder(
                 future: postsAPI.fetchWhatsNew(),
                 builder: (context, AsyncSnapshot snapShot) {
-                  Post post1 = snapShot.data[0];
-                  Post post2 = snapShot.data[1];
-                  Post post3 = snapShot.data[2];
-                  return Column(
-                    children: <Widget>[
-                      _drawSingleRow(post1),
-                      _drawDivider(),
-                      _drawSingleRow(post2),
-                      _drawDivider(),
-                      _drawSingleRow(post3),
-                    ],
-                  );
+                  switch (snapShot.connectionState) {
+                    case (ConnectionState.waiting):
+                      return loading();
+                      break;
+                    case (ConnectionState.active):
+                      return loading();
+                      break;
+                    case (ConnectionState.none):
+                      return _connexionError();
+                      break;
+                    case (ConnectionState.done):
+                      if (snapShot.error != null) {
+                        return _error(snapShot.error);
+                      } else {
+                        if (snapShot.hasData) {
+                          Post post1 = snapShot.data[0];
+                          Post post2 = snapShot.data[1];
+                          Post post3 = snapShot.data[2];
+                          return Column(
+                            children: <Widget>[
+                              _drawSingleRow(post1),
+                              _drawDivider(),
+                              _drawSingleRow(post2),
+                              _drawDivider(),
+                              _drawSingleRow(post3),
+                            ],
+                          );
+                        } else {
+                          return _noData();
+                        }
+                      }
+                      break;
+                  }
                 },
               ),
             ),
@@ -80,6 +101,15 @@ class _WhatsNewsState extends State<WhatsNews> {
             height: 48,
           )
         ],
+      ),
+    );
+  }
+
+  Widget loading() {
+    return Container(
+      padding: EdgeInsets.only(top: 15, bottom: 16),
+      child: Center(
+        child: CircularProgressIndicator(),
       ),
     );
   }
@@ -259,4 +289,25 @@ class _WhatsNewsState extends State<WhatsNews> {
       ),
     );
   }
+}
+
+Widget _error(var error) {
+  return Container(
+    padding: EdgeInsets.all(16),
+    child: Text(error.toString()),
+  );
+}
+
+Widget _noData() {
+  return Container(
+    padding: EdgeInsets.all(16),
+    child: Text('No Data Available'),
+  );
+}
+
+Widget _connexionError() {
+  return Container(
+    padding: EdgeInsets.all(16),
+    child: Text('Connexion Error !!!'),
+  );
 }
