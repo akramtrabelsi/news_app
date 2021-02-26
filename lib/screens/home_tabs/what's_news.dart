@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:news_app/api/posts_api.dart';
 
 import 'package:news_app/models/post.dart';
-import 'dart:async';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:news_app/utilities/data_utilities.dart';
 
 class WhatsNews extends StatefulWidget {
   @override
@@ -41,7 +41,7 @@ class _WhatsNewsState extends State<WhatsNews> {
             padding: EdgeInsets.all(12),
             child: Card(
               child: FutureBuilder(
-                future: postsAPI.fetchWhatsNew(),
+                future: postsAPI.fetchPostsByCategoryId("1"),
                 builder: (context, AsyncSnapshot snapShot) {
                   switch (snapShot.connectionState) {
                     case (ConnectionState.waiting):
@@ -51,27 +51,32 @@ class _WhatsNewsState extends State<WhatsNews> {
                       return loading();
                       break;
                     case (ConnectionState.none):
-                      return _connexionError();
+                      return connexionError();
                       break;
                     case (ConnectionState.done):
                       if (snapShot.error != null) {
-                        return _error(snapShot.error);
+                        return error(snapShot.error);
                       } else {
                         if (snapShot.hasData) {
-                          Post post1 = snapShot.data[0];
-                          Post post2 = snapShot.data[1];
-                          Post post3 = snapShot.data[2];
-                          return Column(
-                            children: <Widget>[
-                              _drawSingleRow(post1),
-                              _drawDivider(),
-                              _drawSingleRow(post2),
-                              _drawDivider(),
-                              _drawSingleRow(post3),
-                            ],
-                          );
+                          List<Post> posts = snapShot.data;
+                          if (posts.length >= 3) {
+                            Post post1 = snapShot.data[0];
+                            Post post2 = snapShot.data[1];
+                            Post post3 = snapShot.data[2];
+                            return Column(
+                              children: <Widget>[
+                                _drawSingleRow(post1),
+                                _drawDivider(),
+                                _drawSingleRow(post2),
+                                _drawDivider(),
+                                _drawSingleRow(post3),
+                              ],
+                            );
+                          } else {
+                            return noData();
+                          }
                         } else {
-                          return _noData();
+                          return noData();
                         }
                       }
                       break;
@@ -89,7 +94,7 @@ class _WhatsNewsState extends State<WhatsNews> {
     return Padding(
       padding: EdgeInsets.all(8),
       child: FutureBuilder(
-          future: postsAPI.fetchRecentUpdate(),
+          future: postsAPI.fetchPostsByCategoryId("2"),
           builder: (context, snapShot) {
             switch (snapShot.connectionState) {
               case (ConnectionState.waiting):
@@ -99,11 +104,11 @@ class _WhatsNewsState extends State<WhatsNews> {
                 return loading();
                 break;
               case (ConnectionState.none):
-                return _connexionError();
+                return connexionError();
                 break;
               case (ConnectionState.done):
                 if (snapShot.hasError) {
-                  return _error(snapShot.error);
+                  return error(snapShot.error);
                 } else {
                   if (snapShot.hasData) {
                     return Column(
@@ -123,27 +128,12 @@ class _WhatsNewsState extends State<WhatsNews> {
                       ],
                     );
                   } else {
-                    return _noData();
+                    return noData();
                   }
                 }
             }
           }),
     );
-  }
-
-  Widget loading() {
-    return Container(
-      padding: EdgeInsets.only(top: 15, bottom: 16),
-      child: Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
-  }
-
-  String _parseHumanDateTime(String dateTime) {
-    Duration timeAgo = DateTime.now().difference(DateTime.parse(dateTime));
-    DateTime theDifference = DateTime.now().subtract(timeAgo);
-    return timeago.format(theDifference);
   }
 
   Widget _drawSectionTitle(String title) {
@@ -199,7 +189,7 @@ class _WhatsNewsState extends State<WhatsNews> {
                   size: 19,
                 ),
                 Text(
-                  _parseHumanDateTime(post.dateWritten),
+                  parseHumanDateTime(post.dateWritten),
                   style: TextStyle(color: Colors.grey, fontSize: 13),
                 )
               ],
@@ -263,7 +253,7 @@ class _WhatsNewsState extends State<WhatsNews> {
                                 size: 20,
                               ),
                               Text(
-                                _parseHumanDateTime(post.dateWritten),
+                                parseHumanDateTime(post.dateWritten),
                                 style: TextStyle(
                                     color: Colors.grey.shade900, fontSize: 12),
                               )
@@ -315,25 +305,4 @@ class _WhatsNewsState extends State<WhatsNews> {
       ),
     );
   }
-}
-
-Widget _error(var error) {
-  return Container(
-    padding: EdgeInsets.all(16),
-    child: Text(error.toString()),
-  );
-}
-
-Widget _noData() {
-  return Container(
-    padding: EdgeInsets.all(16),
-    child: Text('No Data Available'),
-  );
-}
-
-Widget _connexionError() {
-  return Container(
-    padding: EdgeInsets.all(16),
-    child: Text('Connexion Error !!!'),
-  );
 }

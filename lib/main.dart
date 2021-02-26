@@ -25,8 +25,6 @@ class NewsApp extends StatelessWidget {
   NewsApp(this._screen);
   @override
   Widget build(BuildContext context) {
-    PostsAPI postsAPI = PostsAPI();
-    postsAPI.fetchWhatsNew();
     var wifiIP = WifiInfo().getWifiIP();
     print(wifiIP);
     return MaterialApp(

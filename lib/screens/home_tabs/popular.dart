@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:news_app/api/posts_api.dart';
+import 'package:news_app/models/post.dart';
+import 'package:news_app/utilities/data_utilities.dart';
 
 class Popular extends StatefulWidget {
   @override
@@ -6,26 +9,53 @@ class Popular extends StatefulWidget {
 }
 
 class _PopularState extends State<Popular> {
+  PostsAPI postsAPI = PostsAPI();
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemBuilder: (context, position) {
-        return Card(
-          child: _drawSingleRow(),
-        );
+    return FutureBuilder(
+      future: postsAPI.fetchPostsByCategoryId("3"),
+      builder: (context, AsyncSnapshot snapShot) {
+        switch (snapShot.connectionState) {
+          case (ConnectionState.waiting):
+            return loading();
+            break;
+          case (ConnectionState.active):
+            return loading();
+            break;
+          case (ConnectionState.none):
+            return connexionError();
+            break;
+          case (ConnectionState.done):
+            if (snapShot.error != null) {
+              return error(snapShot.error);
+            } else {
+              if (snapShot.hasData) {
+                List<Post> posts = snapShot.data;
+                return ListView.builder(
+                  itemBuilder: (context, position) {
+                    return Card(
+                      child: _drawSingleRow(posts[position]),
+                    );
+                  },
+                  itemCount: 20,
+                );
+              } else {
+                return noData();
+              }
+            }
+        }
       },
-      itemCount: 20,
     );
   }
 
-  Widget _drawSingleRow() {
+  Widget _drawSingleRow(Post post) {
     return Padding(
       padding: const EdgeInsets.all(12.0),
       child: Row(
         children: [
           SizedBox(
             child: Image(
-              image: ExactAssetImage('assets/images/placeholder_bg.jpg'),
+              image: NetworkImage(post.featuredImage),
               fit: BoxFit.cover,
             ),
             height: 120,
@@ -38,7 +68,7 @@ class _PopularState extends State<Popular> {
             child: Column(
               children: [
                 Text(
-                  'The World Global Warming Global Summit',
+                  post.title,
                   maxLines: 2,
                   style: TextStyle(fontSize: 17),
                 ),
@@ -61,7 +91,7 @@ class _PopularState extends State<Popular> {
                           size: 22,
                         ),
                         Text(
-                          '15 min',
+                          parseHumanDateTime(post.dateWritten),
                           style: TextStyle(color: Colors.grey.shade900),
                         )
                       ],
